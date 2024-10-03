@@ -4,9 +4,12 @@ import cm_sdk_ios_v3
 @objc(CmSdkReactNativeV3)
 class CmSdkReactNativeV3: NSObject {
   
-  private lazy var cmpManager: CMPManager = {
-      return CMPManager.shared
-  }()
+  private let cmpManager: CMPManager
+  
+  override init() {
+    self.cmpManager = CMPManager.shared
+    super.init()
+  }
 
   private func runOnMainThread(_ block: @escaping () -> Void) {
     if Thread.isMainThread {
