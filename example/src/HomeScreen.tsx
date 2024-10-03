@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   SafeAreaView,
@@ -6,226 +6,229 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
+  ActivityIndicator,
 } from 'react-native';
 import CmSdkReactNativeV3 from 'react-native-cm-sdk-react-native-v3';
 
 const HomeScreen: React.FC = () => {
+  const [isLoading, setIsLoading] = useState(true);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    initializeConsent();
+  }, []);
+
+  const initializeConsent = async () => {
+    try {
+      await CmSdkReactNativeV3.setUrlConfig({
+        id: '09cb5dca91e6b',
+        domain: 'delivery.consentmanager.net',
+        language: 'EN',
+        appName: 'CMDemoAppReactNative',
+      });
+
+      await CmSdkReactNativeV3.setWebViewConfig({
+        position: 'fullScreen',
+        backgroundStyle: { type: 'dimmed', color: 'black', opacity: 0.5 },
+        cornerRadius: 5,
+        respectsSafeArea: true,
+        allowsOrientationChanges: true,
+      });
+
+      await CmSdkReactNativeV3.checkWithServerAndOpenIfNecessary();
+      console.log('CMPManager initialized and open consent layer opened if necessary');
+    } catch (error) {
+      console.error('Error initializing consent:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const showToast = (message: string) => {
     setToastMessage(message);
     setTimeout(() => setToastMessage(null), 2000);
   };
 
+  const handleApiCall = async (
+    apiCall: () => Promise<any>,
+    successMessage: (result: any) => string,
+    errorMessage: string = 'An error occurred'
+  ) => {
+    try {
+      const result = await apiCall();
+      showToast(successMessage(result));
+    } catch (error) {
+      showToast(`${errorMessage}: ${error}`);
+    }
+  };
+
   const buttons = [
     {
       title: 'Has User Choice?',
-      onPress: () => {
-        const { hasUserChoice } = CmSdkReactNativeV3.hasUserChoice();
-        showToast(`Has User Choice: ${hasUserChoice}`);
-      },
+      onPress: () => handleApiCall(
+        CmSdkReactNativeV3.hasUserChoice,
+        (result) => `Has User Choice: ${result}`
+      ),
     },
     {
       title: 'Get CMP String',
-      onPress: () => {
-        const { cmpInfo } = CmSdkReactNativeV3.exportCMPInfo();
-        showToast(`CMP String: ${cmpInfo}`);
-      },
+      onPress: () => handleApiCall(
+        CmSdkReactNativeV3.exportCMPInfo,
+        (result) => `CMP String: ${result}`
+      ),
     },
     {
       title: 'Get All Purposes',
-      onPress: () => {
-        const purposes = CmSdkReactNativeV3.getAllPurposesIDs();
-        showToast(`All Purposes: ${purposes.join(', ')}`);
-      },
+      onPress: () => handleApiCall(
+        CmSdkReactNativeV3.getAllPurposesIDs,
+        (result) => `All Purposes: ${result.join(', ')}`
+      ),
     },
     {
       title: 'Has Purpose ID c53?',
-      onPress: () => {
-        const { hasPurposeConsent } =
-          CmSdkReactNativeV3.hasPurposeConsent('c53');
-        showToast(`Has Purpose: ${hasPurposeConsent}`);
-      },
+      onPress: () => handleApiCall(
+        () => CmSdkReactNativeV3.hasPurposeConsent('c53'),
+        (result) => `Has Purpose: ${result}`
+      ),
     },
     {
       title: 'Get Enabled Purposes',
-      onPress: () => {
-        const purposes = CmSdkReactNativeV3.getEnabledPurposesIDs();
-        showToast(`Enabled Purposes: ${purposes.join(', ')}`);
-      },
+      onPress: () => handleApiCall(
+        CmSdkReactNativeV3.getEnabledPurposesIDs,
+        (result) => `Enabled Purposes: ${result.join(', ')}`
+      ),
     },
     {
       title: 'Get Disabled Purposes',
-      onPress: () => {
-        const purposes = CmSdkReactNativeV3.getDisabledPurposesIDs();
-        showToast(`Disabled Purposes: ${purposes.join(', ')}`);
-      },
+      onPress: () => handleApiCall(
+        CmSdkReactNativeV3.getDisabledPurposesIDs,
+        (result) => `Disabled Purposes: ${result.join(', ')}`
+      ),
     },
     {
       title: 'Enable Purposes c52 and c53',
-      onPress: async () => {
-        try {
-          await CmSdkReactNativeV3.acceptPurposes(['c52', 'c53'], true);
-          showToast('Purposes enabled');
-        } catch (error) {
-          showToast(`Error: ${error}`);
-        }
-      },
+      onPress: () => handleApiCall(
+        () => CmSdkReactNativeV3.acceptPurposes(['c52', 'c53'], true),
+        () => 'Purposes enabled'
+      ),
     },
     {
       title: 'Disable Purposes c52 and c53',
-      onPress: async () => {
-        try {
-          await CmSdkReactNativeV3.rejectPurposes(['c52', 'c53'], true);
-          showToast('Purposes disabled');
-        } catch (error) {
-          showToast(`Error: ${error}`);
-        }
-      },
+      onPress: () => handleApiCall(
+        () => CmSdkReactNativeV3.rejectPurposes(['c52', 'c53'], true),
+        () => 'Purposes disabled'
+      ),
     },
     {
       title: 'Get All Vendors',
-      onPress: () => {
-        const vendors = CmSdkReactNativeV3.getAllVendorsIDs();
-        showToast(`All Vendors: ${vendors.join(', ')}`);
-      },
+      onPress: () => handleApiCall(
+        CmSdkReactNativeV3.getAllVendorsIDs,
+        (result) => `All Vendors: ${result.join(', ')}`
+      ),
     },
     {
       title: 'Has Vendor ID s2789?',
-      onPress: () => {
-        const { hasVendorConsent } =
-          CmSdkReactNativeV3.hasVendorConsent('s2789');
-        showToast(`Has Vendor: ${hasVendorConsent}`);
-      },
+      onPress: () => handleApiCall(
+        () => CmSdkReactNativeV3.hasVendorConsent('s2789'),
+        (result) => `Has Vendor: ${result}`
+      ),
     },
     {
       title: 'Get Enabled Vendors',
-      onPress: () => {
-        const vendors = CmSdkReactNativeV3.getEnabledVendorsIDs();
-        showToast(`Enabled Vendors: ${vendors.join(', ')}`);
-      },
+      onPress: () => handleApiCall(
+        CmSdkReactNativeV3.getEnabledVendorsIDs,
+        (result) => `Enabled Vendors: ${result.join(', ')}`
+      ),
     },
     {
       title: 'Get Disabled Vendors',
-      onPress: () => {
-        const vendors = CmSdkReactNativeV3.getDisabledVendorsIDs();
-        showToast(`Disabled Vendors: ${vendors.join(', ')}`);
-      },
+      onPress: () => handleApiCall(
+        CmSdkReactNativeV3.getDisabledVendorsIDs,
+        (result) => `Disabled Vendors: ${result.join(', ')}`
+      ),
     },
     {
       title: 'Enable Vendors s2790 and s2791',
-      onPress: async () => {
-        try {
-          await CmSdkReactNativeV3.acceptVendors(['s2790', 's2791']);
-          showToast('Vendors Enabled');
-        } catch (error) {
-          showToast(`Error: ${error}`);
-        }
-      },
+      onPress: () => handleApiCall(
+        () => CmSdkReactNativeV3.acceptVendors(['s2790', 's2791']),
+        () => 'Vendors Enabled'
+      ),
     },
     {
       title: 'Disable Vendors s2790 and s2791',
-      onPress: async () => {
-        try {
-          await CmSdkReactNativeV3.rejectVendors(['s2790', 's2791']);
-          showToast('Vendors Disabled');
-        } catch (error) {
-          showToast(`Error: ${error}`);
-        }
-      },
+      onPress: () => handleApiCall(
+        () => CmSdkReactNativeV3.rejectVendors(['s2790', 's2791']),
+        () => 'Vendors Disabled'
+      ),
     },
     {
       title: 'Reject All',
-      onPress: async () => {
-        try {
-          await CmSdkReactNativeV3.rejectAll();
-          showToast('All consents rejected');
-        } catch (error) {
-          showToast(`Error: ${error}`);
-        }
-      },
+      onPress: () => handleApiCall(
+        CmSdkReactNativeV3.rejectAll,
+        () => 'All consents rejected'
+      ),
     },
     {
       title: 'Accept All',
-      onPress: async () => {
-        try {
-          await CmSdkReactNativeV3.acceptAll();
-          showToast('All consents accepted');
-        } catch (error) {
-          showToast(`Error: ${error}`);
-        }
-      },
+      onPress: () => handleApiCall(
+        CmSdkReactNativeV3.acceptAll,
+        () => 'All consents accepted'
+      ),
     },
     {
       title: 'Check and Open Consent Layer',
-      onPress: async () => {
-        try {
-          await CmSdkReactNativeV3.checkWithServerAndOpenIfNecessary();
-          showToast('Check and Open Consent Layer operation done successfully');
-        } catch (error) {
-          showToast(`Error: ${error}`);
-        }
-      },
+      onPress: () => handleApiCall(
+        CmSdkReactNativeV3.checkWithServerAndOpenIfNecessary,
+        () => 'Check and Open Consent Layer operation done successfully'
+      ),
     },
     {
       title: 'Check Consent Required',
-      onPress: async () => {
-        try {
-          const needsConsent =
-            await CmSdkReactNativeV3.checkIfConsentIsRequired();
-          showToast(`Needs Consent: ${needsConsent}`);
-        } catch (error) {
-          showToast(`Error: ${error}`);
-        }
-      },
+      onPress: () => handleApiCall(
+        CmSdkReactNativeV3.checkIfConsentIsRequired,
+        (result) => `Needs Consent: ${result}`
+      ),
     },
     {
       title: 'Open Consent Layer',
-      onPress: async () => {
-        try {
-          await CmSdkReactNativeV3.openConsentLayer();
-          showToast('Consent Layer opened successfully');
-        } catch (error) {
-          showToast(`Error: ${error}`);
-        }
-      },
+      onPress: () => handleApiCall(
+        CmSdkReactNativeV3.openConsentLayer,
+        () => 'Consent Layer opened successfully'
+      ),
     },
     {
       title: 'Import CMP String',
-      onPress: async () => {
-        try {
-          await CmSdkReactNativeV3.importCMPInfo(
-            'Q1FERkg3QVFERkg3QUFmR01CSVRCQkVnQUFBQUFBQUFBQWlnQUFBQUFBQUEjXzUxXzUyXzUzXzU0XzU1XzU2XyNfczI3ODlfczI3OTBfczI3OTFfczI2OTdfczk3MV9VXyMxLS0tIw'
-          );
-          showToast('New consent string imported successfully');
-        } catch (error) {
-          showToast(`Error: ${error}`);
-        }
-      },
+      onPress: () => handleApiCall(
+        () => CmSdkReactNativeV3.importCMPInfo(
+          'Q1FERkg3QVFERkg3QUFmR01CSVRCQkVnQUFBQUFBQUFBQWlnQUFBQUFBQUEjXzUxXzUyXzUzXzU0XzU1XzU2XyNfczI3ODlfczI3OTBfczI3OTFfczI2OTdfczk3MV9VXyMxLS0tIw'
+        ),
+        () => 'New consent string imported successfully'
+      ),
     },
     {
       title: 'Reset all CMP Info',
-      onPress: async () => {
-        try {
-          await CmSdkReactNativeV3.resetConsentManagementData();
-          showToast('All consents reset');
-        } catch (error) {
-          showToast(`Error: ${error}`);
-        }
-      },
+      onPress: () => handleApiCall(
+        CmSdkReactNativeV3.resetConsentManagementData,
+        () => 'All consents reset'
+      ),
     },
     {
       title: 'Request ATT Authorization',
-      onPress: async () => {
-        try {
-          const status = await CmSdkReactNativeV3.requestATTAuthorization();
-          showToast(`ATT Status: ${status}`);
-        } catch (error) {
-          showToast(`Error: ${error}`);
-        }
-      },
+      onPress: () => handleApiCall(
+        CmSdkReactNativeV3.requestATTAuthorization,
+        (status) => `ATT Status: ${status}`
+      ),
     },
   ];
+
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#0000ff" />
+        <Text>Initializing Consent Manager...</Text>
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -254,6 +257,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: 'white',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   scrollContent: {
     padding: 20,
