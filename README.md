@@ -10,7 +10,6 @@ npm install react-native-cm-sdk-react-native-v3
 
 ## Usage
 
-
 ```js
 import { multiply } from 'react-native-cm-sdk-react-native-v3';
 
@@ -18,7 +17,6 @@ import { multiply } from 'react-native-cm-sdk-react-native-v3';
 
 const result = await multiply(3, 7);
 ```
-
 
 ## Contributing
 

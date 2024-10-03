@@ -1,30 +1,24 @@
-import { useState, useEffect } from 'react';
-import { StyleSheet, View, Text } from 'react-native';
-import { multiply } from 'react-native-cm-sdk-react-native-v3';
+import { useState } from 'react';
+import { View } from 'react-native';
+import LandingPage from './LandingPage';
+import HomeScreen from './HomeScreen';
 
-export default function App() {
-  const [result, setResult] = useState<number | undefined>();
+const App = () => {
+  const [isConsentInitialized, setIsConsentInitialized] = useState(false);
 
-  useEffect(() => {
-    multiply(3, 7).then(setResult);
-  }, []);
+  const handleConsentInitialized = () => {
+    setIsConsentInitialized(true);
+  };
 
   return (
-    <View style={styles.container}>
-      <Text>Result: {result}</Text>
+    <View style={{ flex: 1 }}>
+      {!isConsentInitialized ? (
+        <LandingPage onConsentInitialized={handleConsentInitialized} />
+      ) : (
+        <HomeScreen />
+      )}
     </View>
   );
-}
+};
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  box: {
-    width: 60,
-    height: 60,
-    marginVertical: 20,
-  },
-});
+export default App;
