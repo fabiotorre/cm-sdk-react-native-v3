@@ -112,10 +112,11 @@ class CmSdkReactNativeV3: NSObject {
   
   @objc(checkIfConsentIsRequired:withRejecter:)
   func checkIfConsentIsRequired(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
-      let isRequired: () = self.cmpManager.checkIfConsentIsRequired(completion: { success in resolve(success)})
-        resolve(isRequired)
-  }
-  
+      self.cmpManager.checkIfConsentIsRequired { success in
+          resolve(success)
+      }
+  }  
+
   @objc(hasUserChoice:withRejecter:)
   func hasUserChoice(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
       let result = self.cmpManager.hasUserChoice()
